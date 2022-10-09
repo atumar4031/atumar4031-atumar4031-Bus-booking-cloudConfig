@@ -1,0 +1,75 @@
+server:
+  port: 7003
+
+eureka:
+  client:
+    register-with-eureka: true
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+      routes:
+        - id: Booking-service
+          uri: ${BOOKING_SERVICE_URL:http://localhost:7001}
+          predicates:
+            - Path=/booking/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: bookingService
+                fallbackUri: forward:/booking-fallback
+        - id: Payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:7002}
+          predicates:
+            - Path=/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentService
+                fallbackUri: forward:/payment-fallback
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      bookingService:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 1000
+        registerHealthIndicator: true
+      paymentService:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 1000
+        registerHealthIndicator: true
+  timelimiter:
+    instances:
+      bookingService:
+        timeoutDuration: 2s
+      paymentService:
+        timeoutDuration: 2s
+
