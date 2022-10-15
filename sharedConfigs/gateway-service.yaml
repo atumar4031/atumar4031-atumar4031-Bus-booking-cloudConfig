@@ -49,6 +49,15 @@ spring:
               args:
                 name: paymentService
                 fallbackUri: forward:/payment-fallback
+         - id: Notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:7005}
+          predicates:
+            - Path=/notification/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notificationService
+                fallbackUri: forward:/notification-fallback
 
 
 resilience4j:
