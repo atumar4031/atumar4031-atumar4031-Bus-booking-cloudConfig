@@ -49,7 +49,7 @@ spring:
               args:
                 name: paymentService
                 fallbackUri: forward:/payment-fallback
-         - id: Notification-service
+        - id: Notification-service
           uri: ${NOTIFICATION_SERVICE_URL:http://localhost:7005}
           predicates:
             - Path=/notification/**
@@ -81,4 +81,3 @@ resilience4j:
         timeoutDuration: 2s
       paymentService:
         timeoutDuration: 2s
-
